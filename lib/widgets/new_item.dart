@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shop_list/data/categories.dart';
 import 'package:shop_list/models/category.dart';
+import 'package:shop_list/models/grocery_item.dart';
 
 class NewItem extends StatefulWidget {
   const NewItem({super.key});
@@ -12,14 +13,19 @@ class _NewItemState extends State<NewItem> {
   final _formKey = GlobalKey<FormState>();
   var _enteredName = '';
   var _enteredQuantity = 1;
-  var _selectedCategory = categories[Categories.vegetables]!; // ✅ Corrected
+  var _selectedCategory = categories[Categories.vegetables]!;
 
   void _saveItem() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      print("Item Name: $_enteredName");
-      print("Quantity: $_enteredQuantity");
-      print("Category: ${_selectedCategory.title}");
+      Navigator.of(context).pop(
+        GroceryItem(
+          id: DateTime.now().toString(), 
+          name: _enteredName, 
+          quantity: _enteredQuantity, 
+          category: _selectedCategory,
+          )
+        );
     }
   }
 
@@ -81,10 +87,10 @@ class _NewItemState extends State<NewItem> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: DropdownButtonFormField<Category>(
-                      value: _selectedCategory, // ✅ Set correct initial value
+                      value: _selectedCategory, 
                       items: categories.entries
                           .map((category) => DropdownMenuItem(
-                                value: category.value, // ✅ Corrected
+                                value: category.value, 
                                 child: Row(
                                   children: [
                                     Container(
@@ -118,7 +124,8 @@ class _NewItemState extends State<NewItem> {
                     onPressed: () {
                       _formKey.currentState!.reset();
                       setState(() {
-                        _selectedCategory = categories[Categories.vegetables]!; // ✅ Reset dropdown manually
+                        _selectedCategory = categories[Categories
+                            .vegetables]!; 
                       });
                     },
                     child: const Text('Reset'),
