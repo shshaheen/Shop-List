@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shop_list/data/dummy_items.dart';
-// import 'package:shop_list/data/dummy_items.dart';
 import 'package:shop_list/models/grocery_item.dart';
 import 'package:shop_list/widgets/new_item.dart';
 
