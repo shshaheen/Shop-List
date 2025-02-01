@@ -18,10 +18,13 @@ class _NewItemState extends State<NewItem> {
   var _enteredName = '';
   var _enteredQuantity = 1;
   var _selectedCategory = categories[Categories.vegetables]!;
-
+  var _isSending = false;
   void _saveItem() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      setState(() {
+        _isSending = true;
+      });
       final url = Uri.https(
           "flutter-prep-ccf49-default-rtdb.firebaseio.com", 'shop-list.json');
       final response = await http.post(url,
@@ -33,21 +36,18 @@ class _NewItemState extends State<NewItem> {
             'quantity': _enteredQuantity,
             'category': _selectedCategory.title,
           }));
-          
+
       final Map<String, dynamic> resData = json.decode(response.body);
       print(response.body);
       print(response.statusCode);
-      if(!context.mounted)
-            return;
+      if (!context.mounted) return;
       Navigator.pop(
-        context,
-        GroceryItem(
-          id: resData['name'], 
-          name: _enteredName, 
-          quantity: _enteredQuantity, 
-          category: _selectedCategory
-          )
-        );
+          context,
+          GroceryItem(
+              id: resData['name'],
+              name: _enteredName,
+              quantity: _enteredQuantity,
+              category: _selectedCategory));
       // response.statusCode = 404
       // Navigator.of(context).pop(
       //   GroceryItem(
@@ -62,11 +62,16 @@ class _NewItemState extends State<NewItem> {
 
   @override
   Widget build(BuildContext context) {
+    Widget content = const Center(
+        child: CircularProgressIndicator(),
+      );
+    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add a new item'),
       ),
-      body: Padding(
+      body: _isSending? content: Padding(
         padding: const EdgeInsets.all(12),
         child: Form(
           key: _formKey,

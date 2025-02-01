@@ -15,17 +15,34 @@ class GroceryList extends StatefulWidget {
 
 class _GroceryListState extends State<GroceryList> {
   List<GroceryItem> _groceryItems = [];
-  
+  var _isLoading = true;
+  String? _error = null;
   @override
   void initState() {
     super.initState();
     _loadItems();
   }
 
+  void _removeItem(GroceryItem item) {
+    final url = Uri.https("flutter-prep-ccf49-default-rtdb.firebaseio.com",
+        'shop-list/${item.id}.json');
+
+    http.delete(url);
+    setState(() {
+      _groceryItems.remove(item);
+    });
+  }
+
   void _loadItems() async {
     final url = Uri.https(
         "flutter-prep-ccf49-default-rtdb.firebaseio.com", 'shop-list.json');
     final response = await http.get(url);
+    if (response.statusCode >= 400) {
+      setState(() {
+        _error = "Failed to fetch data. Please try again later";
+        return;
+      });
+    }
     final Map<String, dynamic> listData = json.decode(response.body);
     List<GroceryItem> _loadedItems = [];
     for (final item in listData.entries) {
@@ -40,7 +57,10 @@ class _GroceryListState extends State<GroceryList> {
           quantity: item.value['quantity'],
           category: cat));
     }
-    setState(() => _groceryItems = _loadedItems);
+    setState(() {
+      _groceryItems = _loadedItems;
+      _isLoading = false;
+    });
     print(_loadedItems[0].name);
     print(response);
     print(listData);
@@ -52,8 +72,7 @@ class _GroceryListState extends State<GroceryList> {
         builder: (context) => const NewItem(),
       ),
     );
-    if(newItem==null)
-    {
+    if (newItem == null) {
       return;
     }
     setState(() {
@@ -65,7 +84,18 @@ class _GroceryListState extends State<GroceryList> {
   @override
   Widget build(BuildContext context) {
     Widget content;
-    if (_groceryItems.isNotEmpty) {
+    if (_error != null) {
+      // print("error");
+      content = Center(
+        child: Text(_error!),
+      );
+    } else if (_isLoading) {
+      content = const Center(
+        child: CircularProgressIndicator(),
+      );
+    } else if (_groceryItems.isEmpty) {
+      content = Center(child: const Text('No groceries added yet..!'));
+    } else {
       content = ListView.builder(
         itemCount: _groceryItems.length,
         itemBuilder: (context, index) => Dismissible(
@@ -91,16 +121,12 @@ class _GroceryListState extends State<GroceryList> {
             ),
           ),
           onDismissed: (direction) {
-            setState(() {
-              _groceryItems
-                  .removeWhere((elem) => elem.id == _groceryItems[index].id);
-            });
+            _removeItem(_groceryItems[index]);
           },
         ),
       );
-    } else {
-      content = Center(child: const Text('No groceries added yet..!'));
     }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your Groceries'),
